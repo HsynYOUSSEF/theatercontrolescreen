@@ -381,4 +381,4 @@ For smooth playback without lag:
 
 ---
 
-*Theater Control System — Built at LAPP, Annecy*
+*Theater Control System — Built at LAPP, Annecy by Hussein Youssef & Ali Sayed
