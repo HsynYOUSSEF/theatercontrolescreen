@@ -103,7 +103,7 @@ http://[YOUR-IP]:3000/screen/B1    ← Sector B, Screen 1
 | Upload to other sessions | ✅ | ❌ |
 | Create/delete sessions | ✅ | ❌ |
 | Add/delete sectors | ✅ | ❌ |
-| Stop All Screens | ✅ | ❌ |
+| Stop All Screens | ✅ | ✅ |
 | Share Screen | ✅ | ✅ |
 
 ---
