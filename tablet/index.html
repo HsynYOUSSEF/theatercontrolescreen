@@ -1,0 +1,1389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Theater Control</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+:root{--bg:#08080b;--surface:#0f0f14;--surface2:#16161e;--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);--text:#f0f0f4;--muted:rgba(240,240,244,0.38);--radius:16px;--radius-sm:10px;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',system-ui,sans-serif;display:flex;flex-direction:column;}
+
+/* HEADER */
+header{padding:11px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);flex-shrink:0;background:rgba(8,8,11,0.97);backdrop-filter:blur(12px);gap:6px;flex-wrap:wrap;}
+.logo{display:flex;align-items:center;gap:8px;}
+.logo-icon{width:26px;height:26px;border-radius:7px;background:linear-gradient(135deg,#1a1a2e,#0f3460);border:1px solid rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;}
+.logo-text{font-size:13px;font-weight:600;letter-spacing:-0.01em;}
+.logo-text span{opacity:0.35;font-weight:400;}
+.header-right{display:flex;align-items:center;gap:5px;flex-wrap:wrap;}
+.conn-pill{display:flex;align-items:center;gap:4px;padding:4px 9px;border-radius:100px;background:rgba(255,255,255,0.04);border:1px solid var(--border);font-size:10px;color:var(--muted);}
+.conn-dot{width:5px;height:5px;border-radius:50%;background:#3B6D11;flex-shrink:0;}
+.role-badge{padding:3px 9px;border-radius:100px;font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;}
+.role-badge.admin{background:rgba(244,160,48,0.2);color:#f4a030;border:1px solid rgba(244,160,48,0.3);}
+.role-badge.viewer{background:rgba(77,166,232,0.15);color:#4da6e8;border:1px solid rgba(77,166,232,0.25);}
+.hdr-btn{padding:6px 11px;border-radius:100px;border:1px solid var(--border2);background:rgba(255,255,255,0.05);color:var(--text);font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;cursor:pointer;transition:all 0.2s;white-space:nowrap;}
+.hdr-btn:hover{background:rgba(255,255,255,0.1);}
+.hdr-btn.welcome{background:linear-gradient(135deg,#1a1a2e,#0f3460);border-color:rgba(255,255,255,0.15);color:#fff;}
+.hdr-btn.stop{background:rgba(180,30,30,0.18);border-color:rgba(220,60,60,0.4);color:#ff7070;}
+.logout-btn{padding:4px 9px;border-radius:100px;border:1px solid rgba(255,255,255,0.08);background:transparent;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:10px;cursor:pointer;}
+.logout-btn:hover{color:#ff7070;}
+
+/* NAV */
+.nav-tabs{display:flex;gap:2px;padding:8px 16px 0;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--bg);}
+.nav-tab{padding:7px 14px;border-radius:10px 10px 0 0;border:1px solid transparent;border-bottom:none;background:transparent;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all 0.15s;position:relative;bottom:-1px;white-space:nowrap;}
+.nav-tab.active{background:var(--surface2);color:var(--text);border-color:var(--border);border-bottom-color:var(--surface2);}
+
+/* MAIN */
+.main{flex:1;overflow-y:auto;overflow-x:hidden;}
+.tab-page{display:none;padding:12px 16px 20px;}
+.tab-page.active{display:block;}
+.section-label{font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:9px;margin-top:4px;}
+
+/* SECTOR CARDS GRID */
+.sectors-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:9px;margin-bottom:14px;}
+.sector-card{border-radius:var(--radius);border:1px solid var(--border);background:var(--surface);overflow:hidden;cursor:pointer;transition:transform 0.15s,border-color 0.2s;user-select:none;position:relative;}
+.sector-card:active{transform:scale(0.97);}
+.sector-card:hover{border-color:var(--border2);}
+.sector-thumb{height:62px;position:relative;overflow:hidden;background:rgba(255,255,255,0.03);display:flex;align-items:center;justify-content:center;}
+.sector-thumb img,.sector-thumb video{width:100%;height:100%;object-fit:cover;}
+.sector-thumb-empty{font-size:10px;color:var(--muted);}
+.sector-thumb-overlay{position:absolute;inset:0;background:linear-gradient(180deg,transparent 40%,rgba(0,0,0,0.55));}
+.sector-thumb-letter{position:absolute;bottom:5px;left:9px;font-size:19px;font-weight:700;letter-spacing:-0.04em;line-height:1;}
+.sector-info{padding:7px 10px 3px;display:flex;align-items:center;justify-content:space-between;}
+.sector-name-text{font-size:11px;font-weight:500;}
+.sector-badge{font-size:9px;padding:2px 6px;border-radius:100px;font-weight:500;}
+.badge-live{background:rgba(59,109,17,0.3);color:#7dd45a;}
+.badge-ready{background:rgba(186,117,23,0.2);color:#f0a030;}
+.badge-off{background:rgba(255,255,255,0.05);color:var(--muted);}
+.sector-screens-row{padding:3px 10px;display:flex;gap:4px;}
+.screen-pill{flex:1;height:22px;border-radius:5px;background:rgba(255,255,255,0.04);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--muted);font-family:'DM Mono',monospace;position:relative;overflow:hidden;}
+.screen-pill.live{border-color:rgba(255,255,255,0.18);}
+.screen-pill-bar{position:absolute;bottom:0;left:0;right:0;height:2px;}
+.sector-actions{padding:6px 9px 8px;display:flex;gap:5px;}
+.card-btn{flex:1;padding:5px 3px;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:10px;font-weight:500;cursor:pointer;transition:all 0.15s;text-align:center;}
+.card-btn:active{transform:scale(0.95);}
+.card-btn-launch{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.14);color:var(--text);}
+.card-btn-last{background:rgba(77,166,232,0.12);border:1px solid rgba(77,166,232,0.25);color:#4da6e8;flex:0 0 auto;padding:5px 8px;}
+.card-btn-last.no-history{opacity:0.3;pointer-events:none;}
+.card-btn-clear{background:transparent;border:1px solid var(--border);color:var(--muted);flex:0 0 auto;padding:5px 8px;}
+.card-btn-clear:hover{border-color:rgba(255,80,80,0.4);color:#ff6060;}
+.card-btn-delete{background:transparent;border:1px solid var(--border);color:var(--muted);width:24px;height:24px;padding:0;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:10px;cursor:pointer;position:absolute;top:4px;right:4px;z-index:10;opacity:0;transition:opacity 0.2s;}
+.sector-card:hover .card-btn-delete{opacity:1;}
+.card-btn-delete:hover{color:#ff6060;border-color:rgba(255,80,80,0.4);background:rgba(255,50,50,0.1);}
+.add-sector-card{border-radius:var(--radius);border:1.5px dashed var(--border2);background:transparent;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:148px;cursor:pointer;transition:all 0.2s;color:var(--muted);gap:5px;}
+.add-sector-card:hover{border-color:rgba(255,255,255,0.3);color:var(--text);background:rgba(255,255,255,0.02);}
+/* THEME */
+.ac-crimson{color:#e05a6a}.bar-crimson{background:#e05a6a}
+.ac-ocean{color:#4da6e8}.bar-ocean{background:#4da6e8}
+.ac-forest{color:#5cbe7a}.bar-forest{background:#5cbe7a}
+.ac-amber{color:#f4a030}.bar-amber{background:#f4a030}
+.ac-violet{color:#a07ce8}.bar-violet{background:#a07ce8}
+.ac-slate{color:#7ab4d4}.bar-slate{background:#7ab4d4}
+.ac-rose{color:#e87cad}.bar-rose{background:#e87cad}
+
+/* SEARCH BAR */
+.lib-search-wrap{position:relative;margin-bottom:12px;}
+.lib-search{width:100%;padding:10px 14px 10px 36px;border-radius:100px;border:1px solid var(--border2);background:rgba(255,255,255,0.05);color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;outline:none;transition:border-color 0.2s;}
+.lib-search:focus{border-color:rgba(255,255,255,0.25);}
+.lib-search::placeholder{color:var(--muted);}
+.lib-search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:14px;color:var(--muted);pointer-events:none;}
+.lib-search-clear{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--muted);cursor:pointer;background:none;border:none;padding:2px 6px;border-radius:100px;}
+.lib-search-clear:hover{color:var(--text);}
+/* SEARCH */
+.lib-search-wrap{position:relative;margin-bottom:12px;}
+.lib-search{width:100%;padding:10px 14px 10px 36px;border-radius:100px;border:1px solid var(--border2);background:rgba(255,255,255,0.05);color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;outline:none;}
+.lib-search::placeholder{color:var(--muted);}
+.lib-search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:14px;color:var(--muted);pointer-events:none;}
+.lib-search-clear{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--muted);cursor:pointer;background:none;border:none;padding:2px 6px;}
+/* LIBRARY TAB */
+.library-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.session-tabs{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px;}
+.session-tab{padding:6px 13px;border-radius:100px;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:11px;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;gap:5px;}
+.session-tab.active{background:rgba(255,255,255,0.1);border-color:rgba(255,255,255,0.25);color:var(--text);}
+.session-tab .del-s{font-size:9px;opacity:0.5;cursor:pointer;margin-left:2px;}
+.session-tab .del-s:hover{opacity:1;color:#ff6060;}
+.add-session-btn{padding:5px 11px;border-radius:100px;border:1.5px dashed var(--border2);background:transparent;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:11px;cursor:pointer;}
+.add-session-btn:hover{color:var(--text);}
+.lib-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:7px;}
+.lib-item{border-radius:9px;overflow:hidden;cursor:pointer;border:1.5px solid var(--border);position:relative;aspect-ratio:16/9;background:rgba(255,255,255,0.04);transition:border-color 0.15s;}
+.lib-item:hover{border-color:rgba(255,255,255,0.25);}
+.lib-item img,.lib-item video{width:100%;height:100%;object-fit:cover;}
+.lib-item-type{position:absolute;bottom:3px;left:3px;background:rgba(0,0,0,0.75);color:#fff;font-size:8px;padding:2px 4px;border-radius:3px;}
+.lib-item-del{position:absolute;top:3px;right:3px;background:rgba(0,0,0,0.7);color:#fff;font-size:9px;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity 0.15s;cursor:pointer;border:none;}
+.lib-item:hover .lib-item-del{opacity:1;}
+.lib-item-del:hover{background:rgba(200,50,50,0.9);}
+.lib-upload-area{border-radius:9px;border:1.5px dashed var(--border2);display:flex;flex-direction:column;align-items:center;justify-content:center;aspect-ratio:16/9;cursor:pointer;color:var(--muted);font-size:10px;gap:4px;transition:all 0.2s;}
+.lib-upload-area:hover{border-color:rgba(255,255,255,0.3);color:var(--text);}
+.lib-empty{grid-column:1/-1;text-align:center;color:var(--muted);font-size:11px;padding:28px 0;}
+
+/* LIVE SCREEN PREVIEW IN PANEL */
+.sp-live-preview{
+  padding:12px 16px 0;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+.sp-preview-card{
+  border-radius:var(--radius-sm);
+  border:1px solid var(--border);
+  background:var(--surface);
+  overflow:hidden;
+  position:relative;
+}
+.sp-preview-thumb{
+  height:120px;
+  background:rgba(255,255,255,0.03);
+  display:flex;align-items:center;justify-content:center;
+  position:relative;overflow:hidden;
+  border-bottom:1px solid var(--border);
+}
+.sp-preview-thumb img,.sp-preview-thumb video{
+  width:100%;height:100%;object-fit:cover;
+}
+.sp-preview-thumb .announcement-mini{
+  width:100%;height:100%;
+  display:flex;align-items:center;justify-content:center;
+  padding:6px;text-align:center;
+}
+.sp-preview-thumb .announcement-mini span{
+  font-size:9px;color:#fff;font-weight:500;line-height:1.3;
+}
+.sp-preview-empty{
+  font-size:10px;color:var(--muted);
+}
+.sp-preview-footer{
+  padding:5px 8px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.sp-preview-id{
+  font-size:10px;font-family:'DM Mono',monospace;color:var(--text);font-weight:500;
+}
+.sp-preview-status{
+  font-size:9px;padding:1px 6px;border-radius:100px;font-weight:500;
+}
+.sp-preview-live{background:rgba(59,109,17,0.3);color:#7dd45a;}
+.sp-preview-empty-badge{background:rgba(255,255,255,0.05);color:var(--muted);}
+
+/* ═══════════════════════════════════
+   SECTOR FULL-SCREEN PANEL (swipeable)
+═══════════════════════════════════ */
+#sectorPanel{
+  position:fixed;inset:0;
+  background:var(--bg);
+  transform:translateY(100%);
+  transition:transform 0.35s cubic-bezier(0.32,0.72,0,1);
+  z-index:200;
+  display:flex;flex-direction:column;
+}
+#sectorPanel.open{transform:translateY(0);}
+
+.sp-header{
+  padding:12px 16px;
+  display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid var(--border);
+  flex-shrink:0;
+  background:var(--bg);
+}
+.sp-title{font-size:16px;font-weight:600;letter-spacing:-0.02em;}
+.sp-sub{font-size:11px;color:var(--muted);margin-top:1px;}
+.sp-close{width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,0.07);border:none;color:var(--text);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+
+/* Screen indicator dots */
+.sp-dots{display:flex;justify-content:center;gap:7px;padding:10px 0 4px;flex-shrink:0;}
+.sp-dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,0.15);transition:all 0.25s;cursor:pointer;}
+.sp-dot.active{background:var(--text);width:20px;border-radius:4px;}
+
+/* Swipe container */
+.sp-swiper{
+  flex:1;
+  overflow:hidden;
+  position:relative;
+  width:100%;
+}
+.sp-slides{
+  display:flex;
+  width:200%;
+  height:100%;
+  transition:transform 0.35s cubic-bezier(0.32,0.72,0,1);
+  will-change:transform;
+}
+.sp-slide{
+  width:50%;
+  min-width:50%;
+  height:100%;
+  overflow-y:auto;
+  overflow-x:hidden;
+  padding:14px 16px 90px;
+  flex-shrink:0;
+}
+
+/* Screen editor inside panel */
+.se-screen-label{font-size:11px;font-weight:600;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:12px;font-family:'DM Mono',monospace;}
+.type-row{display:flex;gap:5px;margin-bottom:12px;flex-wrap:wrap;}
+.type-btn{padding:6px 12px;border-radius:100px;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:11px;cursor:pointer;transition:all 0.15s;}
+.type-btn.active{background:rgba(255,255,255,0.1);border-color:rgba(255,255,255,0.3);color:var(--text);}
+.field{margin-bottom:9px;}
+.field label{display:block;font-size:10px;color:var(--muted);margin-bottom:4px;}
+.field input,.field textarea{width:100%;padding:9px 11px;border-radius:var(--radius-sm);border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.04);color:var(--text);font-size:12px;font-family:'DM Sans',sans-serif;outline:none;}
+.field textarea{min-height:55px;resize:vertical;}
+.upload-btn{width:100%;padding:9px;border-radius:var(--radius-sm);border:1px dashed rgba(255,255,255,0.15);background:rgba(255,255,255,0.02);color:var(--muted);font-family:'DM Sans',sans-serif;font-size:11px;cursor:pointer;text-align:center;margin-bottom:6px;transition:all 0.2s;}
+.upload-btn:hover{border-color:rgba(255,255,255,0.3);color:var(--text);}
+.upload-btn.uploading{color:#f4a030;border-color:#f4a030;}
+.upload-btn.done{color:#5cbe7a;border-color:#5cbe7a;}
+
+/* Library accordion inside panel */
+.lib-accordion{margin-top:16px;}
+.lib-accordion-title{font-size:11px;font-weight:600;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px;}
+.lib-session-row{border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface);margin-bottom:7px;overflow:hidden;}
+.lib-session-name{padding:10px 14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;font-size:13px;font-weight:500;transition:background 0.15s;}
+.lib-session-name:hover{background:rgba(255,255,255,0.04);}
+.lib-session-name .chevron{font-size:10px;color:var(--muted);transition:transform 0.2s;}
+.lib-session-name.open .chevron{transform:rotate(90deg);}
+.lib-session-files{display:none;padding:8px;grid-template-columns:repeat(auto-fill,minmax(85px,1fr));gap:6px;}
+.lib-session-files.open{display:grid;}
+.lib-thumb{border-radius:7px;overflow:hidden;cursor:pointer;border:1.5px solid var(--border);position:relative;aspect-ratio:16/9;background:rgba(255,255,255,0.04);transition:border-color 0.15s;}
+.lib-thumb:hover{border-color:rgba(255,255,255,0.3);}
+.lib-thumb.selected{border-color:#5cbe7a;box-shadow:0 0 0 1px #5cbe7a;}
+.lib-thumb img,.lib-thumb video{width:100%;height:100%;object-fit:cover;}
+.lib-thumb-type{position:absolute;bottom:2px;left:2px;background:rgba(0,0,0,0.75);color:#fff;font-size:7px;padding:1px 4px;border-radius:3px;}
+.lib-empty-session{font-size:11px;color:var(--muted);padding:12px;text-align:center;}
+
+/* Panel actions bar */
+.sp-actions{
+  position:fixed;bottom:0;left:0;right:0;
+  background:rgba(8,8,11,0.97);backdrop-filter:blur(12px);
+  border-top:1px solid var(--border);
+  padding:10px 16px env(safe-area-inset-bottom,10px);
+  display:none;flex-direction:column;gap:7px;
+  z-index:201;
+}
+#sectorPanel.open .sp-actions{display:flex;}
+.sp-actions-row{display:flex;gap:7px;}
+.sp-btn{flex:1;padding:13px;border-radius:var(--radius);border:none;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:opacity 0.2s,transform 0.15s;text-align:center;}
+.sp-btn:active{transform:scale(0.98);opacity:0.85;}
+.sp-btn-launch{background:#fff;color:#0a0a0c;}
+.sp-btn-clear{background:rgba(255,255,255,0.07);color:var(--text);border:1px solid var(--border)!important;flex:0 0 auto;padding:13px 16px;}
+.sp-btn-share{background:rgba(92,190,122,0.15);color:#5cbe7a;border:1px solid rgba(92,190,122,0.3)!important;flex:0 0 auto;padding:13px 14px;font-size:12px;}
+.sp-mirror-row{display:flex;align-items:center;gap:9px;}
+.sp-mirror-label{font-size:12px;color:var(--muted);}
+.toggle{width:38px;height:21px;border-radius:11px;background:rgba(255,255,255,0.1);border:none;cursor:pointer;position:relative;transition:background 0.2s;flex-shrink:0;}
+.toggle.on{background:#3B6D11;}
+.toggle::after{content:'';position:absolute;top:3px;left:3px;width:15px;height:15px;border-radius:50%;background:#fff;transition:transform 0.2s;}
+.toggle.on::after{transform:translateX(17px);}
+
+/* MODALS */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.85);display:none;align-items:center;justify-content:center;z-index:300;padding:20px;}
+.modal-bg.open{display:flex;}
+.modal-box{background:#1a1a22;border:1px solid rgba(255,255,255,0.1);border-radius:18px;padding:20px;width:100%;max-width:370px;}
+.modal-box h3{font-size:15px;font-weight:600;margin-bottom:5px;}
+.modal-box p{font-size:11px;color:var(--muted);margin-bottom:12px;line-height:1.5;}
+.modal-box input,.modal-box select{width:100%;padding:9px 12px;border-radius:9px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);color:#fff;font-size:12px;font-family:'DM Sans',sans-serif;margin-bottom:8px;outline:none;}
+.modal-actions{display:flex;gap:7px;margin-top:3px;}
+.modal-btn{flex:1;padding:10px;border-radius:9px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;}
+.mb-primary{background:#fff;color:#0a0a0c;border:none;}
+.mb-cancel{background:transparent;border:1px solid var(--border);color:var(--text);}
+.mb-danger{background:rgba(180,30,30,0.2);border:1px solid rgba(220,60,60,0.4);color:#ff7070;}
+.theme-picker{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
+.theme-dot{width:22px;height:22px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:border-color 0.15s,transform 0.15s;}
+.theme-dot:hover{transform:scale(1.15);}
+.theme-dot.selected{border-color:#fff;}
+
+/* SCREEN SHARE MODAL */
+#shareModal .screen-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(75px,1fr));gap:6px;margin-bottom:11px;max-height:200px;overflow-y:auto;}
+.share-screen-item{border-radius:7px;border:1.5px solid var(--border);padding:7px 5px;text-align:center;cursor:pointer;transition:all 0.15s;font-size:10px;color:var(--muted);}
+.share-screen-item:hover{border-color:rgba(92,190,122,0.4);color:#5cbe7a;}
+.share-screen-item.selected{border-color:#5cbe7a;background:rgba(92,190,122,0.1);color:#5cbe7a;}
+.share-screen-item.offline{opacity:0.35;pointer-events:none;}
+.share-preview{width:100%;height:55px;border-radius:6px;background:rgba(255,255,255,0.04);display:flex;align-items:center;justify-content:center;margin-bottom:7px;overflow:hidden;}
+.share-preview video{width:100%;height:100%;object-fit:cover;}
+#shareStatus{font-size:10px;color:var(--muted);text-align:center;margin-bottom:8px;min-height:14px;}
+
+
+
+/* LOGIN */
+#loginScreen{position:fixed;inset:0;background:#08080b;display:flex;align-items:center;justify-content:center;z-index:999;padding:24px;}
+#loginScreen.hidden{display:none;}
+.login-box{width:100%;max-width:310px;background:#111118;border:1px solid rgba(255,255,255,0.1);border-radius:22px;padding:26px 22px;text-align:center;}
+.login-icon{font-size:36px;margin-bottom:12px;}
+.login-title{font-size:18px;font-weight:600;letter-spacing:-0.02em;margin-bottom:4px;}
+.login-sub{font-size:11px;color:rgba(240,240,244,0.38);margin-bottom:22px;}
+.login-input{width:100%;padding:11px 13px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);color:#fff;font-size:14px;font-family:'DM Sans',sans-serif;outline:none;margin-bottom:8px;}
+.login-btn{width:100%;padding:12px;border-radius:10px;border:none;background:#fff;color:#0a0a0c;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;}
+.login-btn:disabled{opacity:0.5;cursor:not-allowed;}
+.login-error{font-size:11px;color:#ff7070;margin-top:7px;min-height:15px;}
+
+/* TOAST */
+#toast{position:fixed;bottom:75px;left:50%;transform:translateX(-50%) translateY(20px);background:rgba(25,25,35,0.97);color:#fff;padding:9px 17px;border-radius:100px;font-size:12px;opacity:0;transition:all 0.3s;z-index:500;white-space:nowrap;border:1px solid rgba(255,255,255,0.1);}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.sector-card.drag-over{border-color:#5cbe7a!important;background:rgba(92,190,122,0.08);}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">🎭</div>
+    <div class="logo-text">Theater Control <span>/ Live</span></div>
+  </div>
+  <div class="header-right">
+    <div class="conn-pill"><div class="conn-dot"></div><span id="connCount">0 online</span></div>
+    <span class="role-badge" id="roleBadge">—</span>
+    <button class="hdr-btn" onclick="openBroadcast()">📢 Broadcast</button>
+    <button class="hdr-btn welcome" onclick="openWelcomeConfig()">★ Welcome</button>
+    <button class="hdr-btn stop" id="stopBtn" onclick="stopAllScreens()">⏹ Stop All</button>
+    <button class="logout-btn" onclick="doLogout()">Logout</button>
+  </div>
+</header>
+
+<div class="nav-tabs">
+  <button class="nav-tab active" onclick="switchTab('sectors',this)">Sectors</button>
+  <button class="nav-tab" onclick="switchTab('library',this)">Library</button>
+</div>
+
+<div class="main">
+  <!-- SECTORS TAB -->
+  <div class="tab-page active" id="tab-sectors">
+    <div class="section-label" style="margin-top:12px">All Sectors</div>
+    <div class="sectors-grid" id="sectorsGrid"></div>
+  </div>
+  <!-- LIBRARY TAB -->
+  <div class="tab-page" id="tab-library">
+    <div style="margin-top:12px"></div>
+    <div class="library-header">
+      <div class="section-label" style="margin:0">Media Library</div>
+      <button class="add-session-btn" id="addSessionBtn" onclick="openAddSession()" style="display:none">+ New Session</button>
+    </div>
+    <div class="lib-search-wrap">
+      <span class="lib-search-icon">🔍</span>
+      <input class="lib-search" type="text" id="libSearch" placeholder="Search sessions and media..." oninput="searchLibrary(this.value)">
+      <button class="lib-search-clear" onclick="clearLibSearch()" id="libSearchClear" style="display:none">✕</button>
+    </div>
+    <div class="session-tabs" id="sessionTabs"></div>
+    <div class="lib-grid" id="libGrid"></div>
+    <div id="libSearchResults" style="display:none">
+      <div class="section-label" style="margin-top:4px">Search Results</div>
+      <div class="lib-grid" id="libSearchGrid"></div>
+    </div>
+  </div>
+</div>
+
+
+
+<!-- ═══ SECTOR FULL-SCREEN PANEL ═══ -->
+<div id="sectorPanel">
+  <div class="sp-header">
+    <div>
+      <div class="sp-title" id="spTitle">Sector A</div>
+      <div class="sp-sub" id="spSub">Swipe to switch between screens</div>
+    </div>
+    <button class="sp-close" onclick="closePanel()">✕</button>
+  </div>
+
+  <!-- Dots indicator -->
+  <div class="sp-dots">
+    <div class="sp-dot active" onclick="goToSlide(0)" id="dot0"></div>
+    <div class="sp-dot" onclick="goToSlide(1)" id="dot1"></div>
+  </div>
+
+  <!-- Swipeable slides -->
+  <div class="sp-swiper" id="spSwiper">
+    <div class="sp-slides" id="spSlides">
+      <!-- Slide 0: Screen 1 -->
+      <div class="sp-slide" id="slide0">
+        <div class="se-screen-label" id="slideLabel0">Screen — Left</div>
+        <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:6px">Currently on screen</div>
+        <div id="spPreview0" style="margin-bottom:16px;border-radius:var(--radius-sm);overflow:hidden;border:1px solid var(--border)"></div>
+        <div class="lib-accordion">
+          <div id="libAccordion0"></div>
+        </div>
+      </div>
+      <!-- Slide 1: Screen 2 -->
+      <div class="sp-slide" id="slide1">
+        <div class="se-screen-label" id="slideLabel1">Screen — Right</div>
+        <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:6px">Currently on screen</div>
+        <div id="spPreview1" style="margin-bottom:16px;border-radius:var(--radius-sm);overflow:hidden;border:1px solid var(--border)"></div>
+        <div class="lib-accordion">
+          <div id="libAccordion1"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fixed bottom actions -->
+  <div class="sp-actions">
+    <div class="sp-mirror-row">
+      <button class="toggle" id="mirrorToggle" onclick="toggleMirror()"></button>
+      <span class="sp-mirror-label">Mirror both screens</span>
+    </div>
+    <div class="sp-actions-row">
+      <button class="sp-btn sp-btn-clear" onclick="confirmClear()">Clear</button>
+      <button class="sp-btn sp-btn-share" style="flex:1;font-size:14px;padding:14px" onclick="shareCurrentScreen()">⬡ Share Screen</button>
+      <button class="sp-btn" style="flex:0 0 auto;padding:14px 16px;font-size:13px;background:rgba(220,50,50,0.18);border:1px solid rgba(220,60,60,0.4)!important;color:#ff6060;" onclick="stopShareToScreen()">⏹ Stop</button>
+    </div>
+  </div>
+</div>
+
+<!-- BROADCAST MODAL -->
+<div class="modal-bg" id="broadcastModal">
+  <div class="modal-box">
+    <h3>📢 Broadcast to All</h3>
+    <p>Pushes an announcement to every screen instantly.</p>
+    <input type="text" id="broadcastHeadline" placeholder="Headline..." maxlength="80">
+    <input type="text" id="broadcastBody" placeholder="Subtext (optional)...">
+    <div class="modal-actions">
+      <button class="modal-btn mb-cancel" onclick="closeBroadcast()">Cancel</button>
+      <button class="modal-btn mb-primary" onclick="sendBroadcast()">Send to All</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM MODAL -->
+<div class="modal-bg" id="confirmModal">
+  <div class="modal-box">
+    <h3 id="confirmTitle">Confirm</h3>
+    <p id="confirmMsg">Are you sure?</p>
+    <div class="modal-actions">
+      <button class="modal-btn mb-cancel" onclick="closeConfirm()">Cancel</button>
+      <button class="modal-btn mb-danger" id="confirmBtn" onclick="executeConfirm()">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD SECTOR MODAL -->
+<div class="modal-bg" id="addSectorModal">
+  <div class="modal-box">
+    <h3>＋ Add Sector</h3>
+    <p>Add a new sector with 2 screens.</p>
+    <input type="text" id="newSectorId" placeholder="ID (e.g. H)" maxlength="4" style="text-transform:uppercase">
+    <input type="text" id="newSectorName" placeholder="Name (e.g. Balcony Left)">
+    <div class="theme-picker" id="themePicker">
+      <div class="theme-dot selected" style="background:#e05a6a" data-theme="crimson" onclick="selectTheme('crimson',this)"></div>
+      <div class="theme-dot" style="background:#4da6e8" data-theme="ocean" onclick="selectTheme('ocean',this)"></div>
+      <div class="theme-dot" style="background:#5cbe7a" data-theme="forest" onclick="selectTheme('forest',this)"></div>
+      <div class="theme-dot" style="background:#f4a030" data-theme="amber" onclick="selectTheme('amber',this)"></div>
+      <div class="theme-dot" style="background:#a07ce8" data-theme="violet" onclick="selectTheme('violet',this)"></div>
+      <div class="theme-dot" style="background:#7ab4d4" data-theme="slate" onclick="selectTheme('slate',this)"></div>
+      <div class="theme-dot" style="background:#e87cad" data-theme="rose" onclick="selectTheme('rose',this)"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="modal-btn mb-cancel" onclick="closeAddSector()">Cancel</button>
+      <button class="modal-btn mb-primary" onclick="submitAddSector()">Add</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD SESSION MODAL -->
+<div class="modal-bg" id="addSessionModal">
+  <div class="modal-box">
+    <h3>＋ New Session</h3>
+    <p>Create a new media folder in the library.</p>
+    <input type="text" id="newSessionName" placeholder="e.g. Gravitational Waves">
+    <div class="modal-actions">
+      <button class="modal-btn mb-cancel" onclick="closeAddSession()">Cancel</button>
+      <button class="modal-btn mb-primary" onclick="submitAddSession()">Create</button>
+    </div>
+  </div>
+</div>
+
+<!-- SCREEN SHARE MODAL -->
+<div class="modal-bg" id="shareModal">
+  <div class="modal-box">
+    <h3>⬡ Share Screen</h3>
+    <p>Select which screens to cast to.</p>
+    <div class="share-preview" id="sharePreview"><span style="font-size:10px;color:var(--muted)">Preview appears here</span></div>
+    <div id="shareStatus"></div>
+    <div class="screen-list" id="shareScreenList"></div>
+    <div class="modal-actions">
+      <button class="modal-btn mb-cancel" onclick="closeShareModal()">Cancel</button>
+      <button class="modal-btn mb-primary" id="shareStartBtn" onclick="startScreenShare()">Start Sharing</button>
+      <button class="modal-btn mb-danger" id="shareStopBtn" onclick="stopScreenShare()" style="display:none">Stop</button>
+    </div>
+  </div>
+</div>
+
+<!-- WELCOME CONFIG MODAL -->
+<div class="modal-bg" id="welcomeModal">
+  <div class="modal-box">
+    <h3>★ Welcome</h3>
+    <p>Choose what to show on all screens when Welcome is launched.</p>
+    <div style="display:flex;gap:7px;margin-bottom:12px">
+      <button class="modal-btn" id="wTypeText" onclick="setWelcomeType('text')" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.3);color:var(--text)">Text</button>
+      <button class="modal-btn" id="wTypeVideo" onclick="setWelcomeType('video')" style="background:transparent;border:1px solid var(--border);color:var(--muted)">Video</button>
+    </div>
+    <div id="wTextFields">
+      <input type="text" id="wHeadline" placeholder="Headline..." value="Welcome" style="width:100%;padding:9px 12px;border-radius:9px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);color:#fff;font-size:12px;font-family:'DM Sans',sans-serif;margin-bottom:8px;outline:none">
+      <input type="text" id="wBody" placeholder="Subtext..." value="The event is about to begin" style="width:100%;padding:9px 12px;border-radius:9px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);color:#fff;font-size:12px;font-family:'DM Sans',sans-serif;margin-bottom:8px;outline:none">
+      <input type="text" id="wEyebrow" placeholder="Eyebrow text..." value="Good Evening" style="width:100%;padding:9px 12px;border-radius:9px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);color:#fff;font-size:12px;font-family:'DM Sans',sans-serif;margin-bottom:8px;outline:none">
+    </div>
+    <div id="wVideoFields" style="display:none">
+      <input type="text" id="wVideoUrl" placeholder="Video URL or pick from library..." style="width:100%;padding:9px 12px;border-radius:9px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);color:#fff;font-size:12px;font-family:'DM Sans',sans-serif;margin-bottom:8px;outline:none">
+      <button onclick="openWelcomeLibPicker()" style="width:100%;padding:9px;border-radius:9px;border:1px dashed rgba(255,255,255,0.2);background:transparent;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;margin-bottom:8px">☰ Pick from Library</button>
+      <div id="wVideoPreview" style="height:55px;border-radius:8px;overflow:hidden;display:none"><video id="wVideoPreviewEl" style="width:100%;height:100%;object-fit:cover" muted></video></div>
+    </div>
+    <div class="modal-actions">
+      <button class="modal-btn mb-cancel" onclick="closeWelcomeConfig()">Cancel</button>
+      <button class="modal-btn mb-primary" onclick="launchWelcome()">Launch to All</button>
+    </div>
+  </div>
+</div>
+
+<!-- WELCOME LIBRARY PICKER -->
+<div class="modal-bg" id="welcomeLibModal">
+  <div class="modal-box" style="max-width:500px">
+    <h3>Pick Welcome Video</h3>
+    <p>Select a video from your library to show on all screens.</p>
+    <div class="lib-grid" id="welcomeLibGrid" style="max-height:280px;overflow-y:auto;margin-bottom:12px"></div>
+    <div class="modal-actions">
+      <button class="modal-btn mb-cancel" onclick="closeWelcomeLibPicker()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- WELCOME CONFIG MODAL -->
+<div class="modal-bg" id="welcomeModal">
+  <div class="modal-box">
+    <h3>★ Welcome</h3>
+    <p>Choose what to show on all screens.</p>
+    <div style="display:flex;gap:7px;margin-bottom:12px">
+      <button class="modal-btn" id="wTypeText" onclick="setWelcomeType('text')" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.3);color:var(--text)">Text</button>
+      <button class="modal-btn" id="wTypeVideo" onclick="setWelcomeType('video')" style="background:transparent;border:1px solid var(--border);color:var(--muted)">Video</button>
+    </div>
+    <div id="wTextFields">
+      <input type="text" id="wHeadline" placeholder="Headline..." value="Welcome" style="width:100%;padding:9px 12px;border-radius:9px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);color:#fff;font-size:12px;font-family:'DM Sans',sans-serif;margin-bottom:8px;outline:none">
+      <input type="text" id="wBody" placeholder="Subtext..." value="The event is about to begin" style="width:100%;padding:9px 12px;border-radius:9px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);color:#fff;font-size:12px;font-family:'DM Sans',sans-serif;margin-bottom:8px;outline:none">
+      <input type="text" id="wEyebrow" placeholder="Eyebrow..." value="Good Evening" style="width:100%;padding:9px 12px;border-radius:9px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);color:#fff;font-size:12px;font-family:'DM Sans',sans-serif;margin-bottom:8px;outline:none">
+    </div>
+    <div id="wVideoFields" style="display:none">
+      <input type="text" id="wVideoUrl" placeholder="Video URL..." style="width:100%;padding:9px 12px;border-radius:9px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);color:#fff;font-size:12px;font-family:'DM Sans',sans-serif;margin-bottom:8px;outline:none">
+      <button onclick="openWelcomeLibPicker()" style="width:100%;padding:9px;border-radius:9px;border:1px dashed rgba(255,255,255,0.2);background:transparent;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;margin-bottom:8px">☰ Pick Video from Library</button>
+    </div>
+    <div class="modal-actions">
+      <button class="modal-btn mb-cancel" onclick="document.getElementById('welcomeModal').classList.remove('open')">Cancel</button>
+      <button class="modal-btn mb-primary" onclick="launchWelcome()">Launch to All</button>
+    </div>
+  </div>
+</div>
+<div class="modal-bg" id="welcomeLibModal">
+  <div class="modal-box" style="max-width:500px">
+    <h3>Pick Welcome Video</h3>
+    <div class="lib-grid" id="welcomeLibGrid" style="max-height:280px;overflow-y:auto;margin-bottom:12px"></div>
+    <div class="modal-actions"><button class="modal-btn mb-cancel" onclick="document.getElementById('welcomeLibModal').classList.remove('open')">Cancel</button></div>
+  </div>
+</div>
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="login-icon">🎭</div>
+    <div class="login-title">Theater Control</div>
+    <div class="login-sub">Enter your credentials</div>
+    <input class="login-input" type="text" id="loginUsername" placeholder="Username" onkeydown="if(event.key==='Enter')document.getElementById('loginPassword').focus()">
+    <input class="login-input" type="password" id="loginPassword" placeholder="Password" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="login-btn" id="loginBtn" onclick="doLogin()">Enter</button>
+    <div class="login-error" id="loginError"></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const SERVER_HOST = window.location.host;
+const THEMES = {crimson:'#e05a6a',ocean:'#4da6e8',forest:'#5cbe7a',amber:'#f4a030',violet:'#a07ce8',slate:'#7ab4d4',rose:'#e87cad'};
+
+let ws, state=null, connected={}, sectorHistory={};
+let activeSectorId=null, mirrorMode=false, currentSlide=0;
+let drafts={s1:{type:'announcement',headline:'',body:'',eyebrow:''},s2:{type:'announcement',headline:'',body:'',eyebrow:''}};
+let confirmCallback=null;
+let authToken=localStorage.getItem('theater_token')||null;
+let userRole=localStorage.getItem('theater_role')||null;
+let selectedNewTheme='crimson';
+let libSessions=[], activeLibSessionId='default';
+let selectedShareScreens=new Set();
+
+// ── AUTH ──
+async function doLogin(){
+  const u=document.getElementById('loginUsername').value.trim();
+  const p=document.getElementById('loginPassword').value;
+  const btn=document.getElementById('loginBtn');
+  const err=document.getElementById('loginError');
+  if(!u||!p){err.textContent='Enter username and password';return;}
+  btn.disabled=true;btn.textContent='Checking...';err.textContent='';
+  try{
+    const res=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:p})});
+    const data=await res.json();
+    if(res.ok&&data.token){
+      authToken=data.token;userRole=data.role;
+      localStorage.setItem('theater_token',authToken);localStorage.setItem('theater_role',userRole);
+      document.getElementById('loginScreen').classList.add('hidden');
+      document.getElementById('loginUsername').value='';document.getElementById('loginPassword').value='';
+      applyRoleUI();connect();
+    }else{err.textContent='Invalid credentials';btn.disabled=false;btn.textContent='Enter';}
+  }catch{err.textContent='Cannot reach server';btn.disabled=false;btn.textContent='Enter';}
+}
+
+async function doLogout(){
+  if(authToken)await fetch('/api/logout',{method:'POST',headers:{'x-auth-token':authToken}}).catch(()=>{});
+  authToken=null;userRole=null;
+  localStorage.removeItem('theater_token');localStorage.removeItem('theater_role');
+  if(ws)ws.close();
+  document.getElementById('loginScreen').classList.remove('hidden');
+}
+
+async function checkAuth(){
+  // Always clear old tokens on page load to force fresh login
+  localStorage.removeItem('theater_token');
+  localStorage.removeItem('theater_role');
+  authToken=null;userRole=null;
+  showLogin();
+}
+
+function showLogin(){document.getElementById('loginScreen').classList.remove('hidden');}
+
+function applyRoleUI(){
+  const badge=document.getElementById('roleBadge');
+  badge.textContent=userRole==='admin'?'Admin':'Viewer';
+  badge.className='role-badge '+(userRole==='admin'?'admin':'viewer');
+  if(userRole!=='admin')document.getElementById('stopBtn').style.display='none';
+  if(userRole==='admin')document.getElementById('addSessionBtn').style.display='';
+}
+
+// ── WS ──
+function connect(){
+  ws=new WebSocket(`ws://${SERVER_HOST}?type=tablet&token=${authToken}`);
+  ws.onopen=()=>console.log('connected');
+  ws.onclose=()=>setTimeout(connect,3000);
+  ws.onmessage=e=>{
+    const msg=JSON.parse(e.data);
+    if(msg.action==='unauthorized'){localStorage.removeItem('theater_token');authToken=null;showLogin();return;}
+    if(msg.action==='webrtc-answer') handleRTCAnswer(msg);
+    if(msg.action==='webrtc-candidate') handleRTCCandidate(msg.candidate);
+    if(msg.action==='state'){state=msg.state;connected=msg.connected||{};sectorHistory=msg.history||{};if(msg.role)userRole=msg.role;renderSectors();updateConn();
+      // Refresh live previews if panel is open
+      if(activeSectorId){const s=state.sectors.find(x=>x.id===activeSectorId);if(s)renderLivePreviews(s);}
+    }
+
+  };
+}
+
+function updateConn(){document.getElementById('connCount').textContent=Object.values(connected).filter(Boolean).length+' online';}
+
+// ── TABS ──
+function switchTab(name,btn){
+  document.querySelectorAll('.tab-page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');btn.classList.add('active');
+  if(name==='library'){loadLibrary();buildLibCache();}
+}
+
+// ── SECTORS ──
+function renderSectors(){
+  if(!state)return;
+  const isAdmin=userRole==='admin';
+  document.getElementById('sectorsGrid').innerHTML=state.sectors.map(s=>{
+    const a=THEMES[s.theme]||'#fff';
+    const live=s.screens[0].content||s.screens[1].content;
+    const c1=connected[s.screens[0].id],c2=connected[s.screens[1].id];
+    const badge=live?'<span class="sector-badge badge-live">Live</span>':(c1||c2?'<span class="sector-badge badge-ready">Ready</span>':'<span class="sector-badge badge-off">Offline</span>');
+    const sc=s.screens[0].content;
+    const thumb=sc?(sc.type==='image'?`<img src="${sc.url}">`:(sc.type==='video'?`<video src="${sc.url}" muted>`:(sc.type==='announcement'?`<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;padding:5px;text-align:center"><span style="font-size:10px;color:#fff;font-weight:500">${sc.headline||''}</span></div>`:''))):'';
+    return `<div class="sector-card" id="card-${s.id}" onclick="openSector('${s.id}')" ondragover="event.preventDefault();this.classList.add('drag-over')" ondragleave="this.classList.remove('drag-over')" ondrop="handleDrop(event,'${s.id}')">
+      ${isAdmin?`<button class="card-btn-delete" onclick="event.stopPropagation();deleteSector('${s.id}')">✕</button>`:''}
+      <div class="sector-thumb" ${sc?.type==='announcement'?`style="background:${sc.bg||'#111'}"`:''}>
+        ${thumb||'<span class="sector-thumb-empty">Empty</span>'}
+        <div class="sector-thumb-overlay"></div>
+        <div class="sector-thumb-letter" style="color:${a}">${s.id}</div>
+      </div>
+      <div class="sector-info"><span class="sector-name-text">${s.name}</span>${badge}</div>
+      <div class="sector-screens-row">${s.screens.map(sc2=>`<div class="screen-pill ${sc2.content?'live':''}"><span style="position:relative;z-index:1">${sc2.id}</span>${sc2.content?`<div class="screen-pill-bar bar-${s.theme}"></div>`:''}</div>`).join('')}</div>
+      <div class="sector-actions" onclick="event.stopPropagation()">
+        <button class="card-btn" style="flex:1;background:rgba(77,166,232,0.15);border:1px solid rgba(77,166,232,0.35);color:#4da6e8;border-radius:8px;padding:6px 4px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;cursor:pointer" onclick="quickClearSector('${s.id}')">⏹ Stop</button>
+      </div>
+    </div>`;
+  }).join('')+(isAdmin?`<div class="add-sector-card" onclick="openAddSector()"><div style="font-size:24px">＋</div><div style="font-size:11px;font-weight:500">Add Sector</div></div>`:'');
+}
+
+// ── SWIPEABLE SECTOR PANEL ──
+function openSector(id){
+  if(!state)return;
+  activeSectorId=id;mirrorMode=false;currentSlide=0;
+  document.getElementById('mirrorToggle').classList.remove('on');
+  const s=state.sectors.find(x=>x.id===id);
+  const a=THEMES[s.theme]||'#fff';
+  document.getElementById('spTitle').innerHTML=`<span style="color:${a}">${id}</span> · ${s.name}`;
+  document.getElementById('spSub').textContent='Swipe ← → to switch between screens';
+  drafts.s1=s.screens[0].content?{...s.screens[0].content}:{type:'announcement',headline:'',body:'',eyebrow:''};
+  drafts.s2=s.screens[1].content?{...s.screens[1].content}:{type:'announcement',headline:'',body:'',eyebrow:''};
+  document.getElementById('slideLabel0').innerHTML=`<span style="font-family:'DM Mono',monospace;font-size:13px;color:var(--text)">${s.screens[0].id}</span> <span style="color:var(--muted);font-size:11px;font-weight:400;text-transform:none;letter-spacing:0">— ${s.screens[0].label.split('-')[1]||'Left'}</span>`;
+  document.getElementById('slideLabel1').innerHTML=`<span style="font-family:'DM Mono',monospace;font-size:13px;color:var(--text)">${s.screens[1].id}</span> <span style="color:var(--muted);font-size:11px;font-weight:400;text-transform:none;letter-spacing:0">— ${s.screens[1].label.split('-')[1]||'Right'}</span>`;
+  try{ renderLivePreviews(s); }catch(e){ console.log('preview error:',e); }
+  try{renderLivePreviews(s);}catch(e){}
+  goToSlide(0);
+  setupSwipe();
+  loadLibraryAccordion(0);loadLibraryAccordion(1);
+  document.getElementById('sectorPanel').classList.add('open');
+}
+
+function closePanel(){
+  document.getElementById('sectorPanel').classList.remove('open');
+  activeSectorId=null;
+}
+
+function renderLivePreviews(sector){
+  sector.screens.forEach((screen,i)=>{
+    const container=document.getElementById('spPreview'+i);
+    if(!container)return;
+    const c=screen.content;
+    const accent=THEMES[sector.theme]||'#fff';
+    let thumb='';
+    if(!c){
+      thumb=`<div style="width:100%;height:120px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:rgba(255,255,255,0.02)"><span style="font-size:28px;opacity:0.15">📺</span><span style="font-size:11px;color:var(--muted)">Nothing on screen</span></div>`;
+    } else if(c.type==='image'&&c.url){
+      thumb=`<img src="${c.url}" style="width:100%;height:120px;object-fit:cover;display:block" onerror="this.style.display='none'">`;
+    } else if(c.type==='video'&&c.url){
+      thumb=`<video src="${c.url}" muted style="width:100%;height:120px;object-fit:cover;display:block"></video>`;
+    } else if(c.type==='announcement'){
+      thumb=`<div style="width:100%;height:120px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px;text-align:center;background:${c.bg||'#1a1a2e'}">${c.eyebrow?`<span style="font-size:9px;color:rgba(255,255,255,0.5);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:4px">${c.eyebrow}</span>`:''}<span style="font-size:14px;font-weight:600;color:#fff">${c.headline||''}</span>${c.body?`<span style="font-size:10px;color:rgba(255,255,255,0.6);margin-top:4px">${c.body}</span>`:''}</div>`;
+    } else {
+      thumb=`<div style="width:100%;height:120px;display:flex;align-items:center;justify-content:center;background:#111"><span style="font-size:11px;color:var(--muted)">${c.type}</span></div>`;
+    }
+    const isLive=!!c;
+    container.innerHTML=`${thumb}<div style="padding:7px 10px;display:flex;align-items:center;justify-content:space-between;background:var(--surface)"><span style="font-size:11px;font-weight:500;color:${accent}">${screen.id}${isLive?' — '+c.type:''}</span><span style="font-size:9px;padding:2px 7px;border-radius:100px;font-weight:500;${isLive?'background:rgba(59,109,17,0.3);color:#7dd45a':'background:rgba(255,255,255,0.05);color:var(--muted)'}">${isLive?'Live':'Empty'}</span></div>`;
+  });
+}
+
+function goToSlide(idx){
+  currentSlide=idx;
+  document.getElementById('spSlides').style.transform=`translateX(${idx===0?'0':'-50%'})`;
+  document.getElementById('dot0').classList.toggle('active',idx===0);
+  document.getElementById('dot1').classList.toggle('active',idx===1);
+}
+
+function setupSwipe(){
+  const swiper=document.getElementById('spSwiper');
+  let startX=0,startY=0,isDragging=false;
+  swiper.ontouchstart=e=>{startX=e.touches[0].clientX;startY=e.touches[0].clientY;isDragging=true;};
+  swiper.addEventListener('touchmove', e=>{
+    if(!isDragging)return;
+    const dx=e.touches[0].clientX-startX;
+    const dy=e.touches[0].clientY-startY;
+    if(Math.abs(dy)>Math.abs(dx)){isDragging=false;return;}
+    e.preventDefault();
+  },{passive:false});
+  swiper.ontouchend=e=>{
+    if(!isDragging)return;isDragging=false;
+    const dx=e.changedTouches[0].clientX-startX;
+    if(dx<-50&&currentSlide===0)goToSlide(1);
+    else if(dx>50&&currentSlide===1)goToSlide(0);
+  };
+}
+
+function renderSlide(idx){
+  // Fields removed — library only
+}
+
+function buildFields(key,d,idx){
+  if(d.type==='announcement')return`
+    <div class="field"><label>Eyebrow</label><input type="text" value="${d.eyebrow||''}" placeholder="Good Evening" oninput="drafts.${key}.eyebrow=this.value"></div>
+    <div class="field"><label>Headline</label><input type="text" value="${d.headline||''}" placeholder="Welcome" oninput="drafts.${key}.headline=this.value"></div>
+    <div class="field"><label>Body</label><textarea placeholder="Details..." oninput="drafts.${key}.body=this.value">${d.body||''}</textarea></div>`;
+  if(d.type==='image')return`
+    <input type="file" id="fi-${key}" accept="image/*" style="display:none" onchange="uploadFile('${key}',this)">
+    <button class="upload-btn" id="ub-${key}" onclick="document.getElementById('fi-${key}').click()">↑ Upload image</button>
+    <div class="field"><label>Or URL</label><input type="url" id="ui-${key}" value="${d.url||''}" placeholder="https://..." oninput="drafts.${key}.url=this.value"></div>
+    ${d.url?`<div style="height:50px;border-radius:7px;overflow:hidden;margin-top:3px"><img src="${d.url}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'"></div>`:''}`;
+  if(d.type==='video')return`
+    <input type="file" id="fi-${key}" accept="video/*" style="display:none" onchange="uploadFile('${key}',this)">
+    <button class="upload-btn" id="ub-${key}" onclick="document.getElementById('fi-${key}').click()">↑ Upload video</button>
+    <div class="field"><label>Or URL</label><input type="url" id="ui-${key}" value="${d.url||''}" placeholder="https://.../video.mp4" oninput="drafts.${key}.url=this.value"></div>`;
+  if(d.type==='custom')return`<div class="field"><label>HTML</label><textarea style="font-family:monospace;font-size:10px" placeholder="<h1>Hello</h1>" oninput="drafts.${key}.html=this.value">${d.html||''}</textarea></div>`;
+  return'';
+}
+
+function setType(key,type,btn,idx){
+  drafts[key].type=type;
+  btn.closest('.type-row').querySelectorAll('.type-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
+  document.getElementById('fields'+idx).innerHTML=buildFields(key,drafts[key],idx);
+  if(mirrorMode){const ok=key==='s1'?'s2':'s1';const oidx=idx===0?1:0;drafts[ok].type=type;document.getElementById('typeRow'+oidx).querySelectorAll('.type-btn').forEach(b=>{b.classList.toggle('active',b.textContent===type);});document.getElementById('fields'+oidx).innerHTML=buildFields(ok,drafts[ok],oidx);}
+}
+
+function toggleMirror(){
+  mirrorMode=!mirrorMode;
+  document.getElementById('mirrorToggle').classList.toggle('on',mirrorMode);
+  if(!activeSectorId||!ws||ws.readyState!==WebSocket.OPEN) return;
+  const s=state.sectors.find(x=>x.id===activeSectorId);
+  if(!s) return;
+  if(mirrorMode){
+    drafts.s2={...drafts.s1};
+    // If share screen is active, extend it to screen 2 as well
+    if(shareStream && shareTargetId){
+      // Just send share-start to screen 2 — frames already flowing to screen 1
+      const screen2Id = s.screens[1].id;
+      if(ws && ws.readyState === WebSocket.OPEN)
+        ws.send(JSON.stringify({ action: 'share-start', targetScreenId: screen2Id }));
+      // Add screen 2 to the targets by restarting the loop with both screens
+      const oldTargetId = shareTargetId;
+      shareTargetId = s.screens[0].id;
+      // Stop interval only, keep stream alive
+      if(shareInterval){ cancelAnimationFrame(shareInterval); shareInterval = null; }
+      startJPEGFallback();
+      showToast('✓ Mirrored share to both screens');
+    } else if(s.screens[0].content){
+      // Mirror normal content
+      ws.send(JSON.stringify({action:'launch',sectorId:activeSectorId,
+        screen1Content:s.screens[0].content,screen2Content:s.screens[0].content}));
+      showToast('✓ Mirrored to both screens');
+    }
+  } else {
+    // Mirror OFF: clear the other screen
+    const otherScreen=s.screens[currentSlide===0?1:0];
+    const keepContent=s.screens[currentSlide].content;
+    const s1=currentSlide===0?keepContent:null;
+    const s2=currentSlide===1?keepContent:null;
+    ws.send(JSON.stringify({action:'launch',sectorId:activeSectorId,
+      screen1Content:s1,screen2Content:s2}));
+    showToast('Mirror off — other screen cleared');
+  }
+}
+
+function launchSector(){
+  if(!activeSectorId||!ws||ws.readyState!==WebSocket.OPEN)return;
+  const s1=mirrorMode?{...drafts.s1}:drafts.s1;
+  const s2=mirrorMode?{...drafts.s1}:drafts.s2;
+  ws.send(JSON.stringify({action:'launch',sectorId:activeSectorId,screen1Content:s1,screen2Content:s2}));
+  closePanel();showToast('✓ Sector launched');
+}
+
+function confirmClear(){
+  const id=activeSectorId;
+  openConfirm('Clear Sector '+id+'?','Clears both screens immediately.','Clear Now',()=>{
+    if(ws&&ws.readyState===WebSocket.OPEN)ws.send(JSON.stringify({action:'clear',sectorId:id}));
+    closePanel();showToast('Sector '+id+' cleared');
+  });
+}
+
+function quickLaunch(id){
+  const s=state.sectors.find(x=>x.id===id);
+  if(s.screens[0].content||s.screens[1].content){
+    if(ws&&ws.readyState===WebSocket.OPEN){ws.send(JSON.stringify({action:'launch',sectorId:id,screen1Content:s.screens[0].content,screen2Content:s.screens[1].content}));showToast('✓ Sector '+id+' launched');}
+  }else openSector(id);
+}
+
+function quickClearSector(id){
+  openConfirm('Clear Sector '+id+'?','Clears both screens immediately.','Clear Now',()=>{
+    if(ws&&ws.readyState===WebSocket.OPEN)ws.send(JSON.stringify({action:'clear',sectorId:id}));
+    showToast('Sector '+id+' cleared');
+  });
+}
+
+function relaunchLast(id){
+  const h=sectorHistory[id]||[];if(!h.length)return;
+  if(ws&&ws.readyState===WebSocket.OPEN){ws.send(JSON.stringify({action:'launch',sectorId:id,screen1Content:h[0].s1,screen2Content:h[0].s2}));showToast('⟳ Last content re-launched');}
+}
+
+// ── LIBRARY ACCORDION INSIDE PANEL ──
+async function loadLibraryAccordion(slideIdx){
+  const container=document.getElementById('libAccordion'+slideIdx);
+  container.innerHTML='<div style="font-size:11px;color:var(--muted);padding:8px 0">Loading...</div>';
+  try{
+    const res=await fetch('/api/library/sessions',{headers:{'x-auth-token':authToken}});
+    const sessions=await res.json();
+    const isAdmin=userRole==='admin';
+    container.innerHTML=sessions.map(s=>`
+      <div class="lib-session-row" id="libRow-${slideIdx}-${s.id}">
+        <div class="lib-session-name" onclick="toggleLibSession('${slideIdx}','${s.id}')">
+          <span>${s.name} <span style="font-size:10px;opacity:0.4">(${s.fileCount})</span></span>
+          <div style="display:flex;align-items:center;gap:6px">
+            ${isAdmin&&s.id!=='default'?`<span style="font-size:10px;color:var(--muted);padding:2px 7px;border:1px solid var(--border);border-radius:100px" onclick="event.stopPropagation();deletePanelSession('${slideIdx}','${s.id}')">✕</span>`:''}
+            <span class="chevron">▶</span>
+          </div>
+        </div>
+        <div class="lib-session-files" id="libFiles-${slideIdx}-${s.id}"></div>
+      </div>`).join('')
+      +(isAdmin?`<div style="padding:8px 0"><button class="add-session-btn" onclick="openAddPanelSession(${slideIdx})" style="width:100%;text-align:center">+ Add New Session</button></div>`:'');
+  }catch{container.innerHTML='<div style="font-size:11px;color:var(--muted);padding:8px 0">Could not load library</div>';}
+}
+
+async function toggleLibSession(slideIdx,sessionId){
+  const nameEl=document.querySelector(`#libRow-${slideIdx}-${sessionId} .lib-session-name`);
+  const filesEl=document.getElementById(`libFiles-${slideIdx}-${sessionId}`);
+  const isOpen=filesEl.classList.contains('open');
+  if(isOpen){filesEl.classList.remove('open');nameEl.classList.remove('open');return;}
+  nameEl.classList.add('open');filesEl.classList.add('open');
+  await loadAccordionFiles(slideIdx,sessionId);
+}
+
+async function loadAccordionFiles(slideIdx,sessionId){
+  const filesEl=document.getElementById(`libFiles-${slideIdx}-${sessionId}`);
+  if(!filesEl)return;
+  filesEl.innerHTML='<div class="lib-empty-session">Loading...</div>';
+  try{
+    const res=await fetch(`/api/library/sessions/${sessionId}/files`,{headers:{'x-auth-token':authToken}});
+    const files=await res.json();
+    const key=slideIdx===0?'s1':'s2';
+    const isAdmin=userRole==='admin';
+    const canEdit=isAdmin||(userRole==='viewer'&&sessionId==='default');
+    const uploadHtml=canEdit?`
+      <div class="lib-thumb" style="border-style:dashed;display:flex;align-items:center;justify-content:center;cursor:pointer" onclick="document.getElementById('accUpload-${slideIdx}-${sessionId}').click()">
+        <input type="file" id="accUpload-${slideIdx}-${sessionId}" accept="image/*,video/*" style="display:none" onchange="uploadToAccordion('${slideIdx}','${sessionId}',this)">
+        <span style="font-size:18px;color:var(--muted)">+</span>
+      </div>`:'';
+    if(!files.length&&!isAdmin){filesEl.innerHTML='<div class="lib-empty-session">No files in this session</div>';return;}
+    filesEl.innerHTML=uploadHtml+files.map(f=>`
+      <div class="lib-thumb ${drafts[key]?.url===f.url?'selected':''}" id="libThumb-${slideIdx}-${encodeURIComponent(f.url)}">
+        <div onclick="pickLibFile('${slideIdx}','${f.url}','${f.type}')" style="width:100%;height:100%;position:absolute;inset:0">
+          ${f.type==='image'?`<img src="${f.url}" loading="lazy" style="width:100%;height:100%;object-fit:cover">`:`<video src="${f.url}" muted style="width:100%;height:100%;object-fit:cover">`}
+        </div>
+        <span class="lib-thumb-type">${f.type}</span>
+        ${canEdit?`<button class="lib-item-del" onclick="event.stopPropagation();deleteAccordionFile('${slideIdx}','${sessionId}','${f.name}')">✕</button>`:''}
+      </div>`).join('');
+  }catch{filesEl.innerHTML='<div class="lib-empty-session">Could not load files</div>';}
+}
+
+async function uploadToAccordion(slideIdx,sessionId,input){
+  const file=input.files[0];if(!file)return;
+  showToast('Uploading...');
+  const fd=new FormData();fd.append('file',file);
+  try{
+    const res=await fetch(`/api/library/sessions/${sessionId}/files`,{method:'POST',headers:{'x-auth-token':authToken},body:fd});
+    if(res.ok){showToast('✓ Uploaded: '+file.name);await loadAccordionFiles(slideIdx,sessionId);}
+    else showToast('Upload failed');
+  }catch{showToast('Upload failed');}
+  input.value='';
+}
+
+async function deleteAccordionFile(slideIdx,sessionId,filename){
+  openConfirm('Delete file?','This cannot be undone.','Delete',async()=>{
+    const res=await fetch(`/api/library/sessions/${sessionId}/files/${filename}`,{method:'DELETE',headers:{'x-auth-token':authToken}});
+    if(res.ok){showToast('File deleted');await loadAccordionFiles(slideIdx,sessionId);}
+  });
+}
+
+function pickLibFile(slideIdx,url,type){
+  slideIdx = parseInt(slideIdx);
+  const key = slideIdx===0 ? 's1' : 's2';
+  const content = {type, url};
+
+  // Save into drafts
+  drafts[key] = {type, url};
+  if(mirrorMode) drafts[key==='s1'?'s2':'s1'] = {type, url};
+
+  // Highlight selected thumbnail
+  document.querySelectorAll('[id^="libThumb-'+slideIdx+'-"]').forEach(el=>el.classList.remove('selected'));
+  document.getElementById('libThumb-'+slideIdx+'-'+encodeURIComponent(url))?.classList.add('selected');
+
+  // AUTO-LAUNCH
+  if(!activeSectorId || !ws || ws.readyState!==WebSocket.OPEN){
+    showToast('✓ Selected — connect to server to launch');
+    return;
+  }
+  const sector = state.sectors.find(s=>s.id===activeSectorId);
+  if(!sector) return;
+
+  const screen1Content = slideIdx===0 ? content : (mirrorMode ? content : sector.screens[0].content);
+  const screen2Content = slideIdx===1 ? content : (mirrorMode ? content : sector.screens[1].content);
+
+  ws.send(JSON.stringify({action:'launch',sectorId:activeSectorId,screen1Content,screen2Content}));
+  showToast('✓ Launched to '+(slideIdx===0?sector.screens[0].id:sector.screens[1].id));
+}
+
+// ── LIBRARY TAB ──
+async function loadLibrary(){
+  try{
+    const res=await fetch('/api/library/sessions',{headers:{'x-auth-token':authToken}});
+    if(!res.ok){showToast('Library error: '+res.status);return;}
+    libSessions=await res.json();
+    if(!Array.isArray(libSessions)){libSessions=[];showToast('Library format error');return;}
+    renderSessionTabs();
+    loadSessionFiles(activeLibSessionId);
+  }catch(e){showToast('Could not load library: '+e.message);console.error('Library error:',e);}
+}
+
+function renderSessionTabs(){
+  const isAdmin=userRole==='admin';
+  document.getElementById('sessionTabs').innerHTML=libSessions.map(s=>`
+    <button class="session-tab ${s.id===activeLibSessionId?'active':''}" onclick="selectLibSession('${s.id}')">
+      ${s.name} <span style="opacity:0.4;font-size:10px">(${s.fileCount})</span>
+      ${isAdmin&&s.id!=='default'?`<span class="del-s" onclick="event.stopPropagation();deleteSession('${s.id}')">✕</span>`:''}
+    </button>`).join('');
+}
+
+function selectLibSession(id){activeLibSessionId=id;renderSessionTabs();loadSessionFiles(id);}
+
+async function loadSessionFiles(sessionId){
+  const grid=document.getElementById('libGrid');
+  grid.innerHTML='<div class="lib-empty">Loading...</div>';
+  try{
+    const res=await fetch(`/api/library/sessions/${sessionId}/files`,{headers:{'x-auth-token':authToken}});
+    const files=await res.json();
+    const isAdmin=userRole==='admin';
+    const canEdit=isAdmin||(userRole==='viewer'&&sessionId==='default');
+    grid.innerHTML=(canEdit?`<div class="lib-upload-area" onclick="document.getElementById('libFileInput').click()"><input type="file" id="libFileInput" accept="image/*,video/*" style="display:none" onchange="uploadToSession('${sessionId}',this)"><div style="font-size:20px">↑</div><div>Upload here</div></div>`:'')
+      +files.map(f=>`<div class="lib-item"><${f.type==='image'?'img':'video'} src="${f.url}" ${f.type==='video'?'muted':''} loading="lazy"><span class="lib-item-type">${f.type}</span>${canEdit?`<button class="lib-item-del" onclick="deleteLibFile('${sessionId}','${f.name}')">✕</button>`:''}</div>`).join('')
+      +(files.length===0&&!canEdit?'<div class="lib-empty">No files in this session</div>':'');
+  }catch{grid.innerHTML='<div class="lib-empty">Could not load</div>';}
+}
+
+async function uploadToSession(sessionId,input){
+  const file=input.files[0];if(!file)return;
+  showToast('Uploading...');
+  const fd=new FormData();fd.append('file',file);
+  try{
+    const res=await fetch(`/api/library/sessions/${sessionId}/files`,{method:'POST',headers:{'x-auth-token':authToken},body:fd});
+    if(res.ok){showToast('✓ Uploaded: '+file.name);loadSessionFiles(sessionId);}
+    else showToast('Upload failed');
+  }catch{showToast('Upload failed');}
+  input.value='';
+}
+
+async function deleteLibFile(sessionId,filename){
+  openConfirm('Delete file?','This cannot be undone.','Delete',async()=>{
+    const res=await fetch(`/api/library/sessions/${sessionId}/files/${filename}`,{method:'DELETE',headers:{'x-auth-token':authToken}});
+    if(res.ok){showToast('File deleted');loadSessionFiles(sessionId);}
+  });
+}
+
+function openAddSession(){document.getElementById('addSessionModal').classList.add('open');document.getElementById('newSessionName').focus();}
+function closeAddSession(){document.getElementById('addSessionModal').classList.remove('open');}
+async function submitAddSession(){
+  const name=document.getElementById('newSessionName').value.trim();if(!name)return;
+  const res=await fetch('/api/library/sessions',{method:'POST',headers:{'Content-Type':'application/json','x-auth-token':authToken},body:JSON.stringify({name})});
+  const data=await res.json();
+  if(res.ok){closeAddSession();document.getElementById('newSessionName').value='';activeLibSessionId=data.id;loadLibrary();loadLibraryAccordion(0);loadLibraryAccordion(1);showToast('Session "'+name+'" created');}
+  else showToast('Error: '+data.error);
+}
+
+async function deleteSession(id){
+  openConfirm('Delete session?','All files will be permanently deleted.','Delete',async()=>{
+    const res=await fetch(`/api/library/sessions/${id}`,{method:'DELETE',headers:{'x-auth-token':authToken}});
+    if(res.ok){if(activeLibSessionId===id)activeLibSessionId='default';loadLibrary();loadLibraryAccordion(0);loadLibraryAccordion(1);showToast('Session deleted');}
+  });
+}
+
+// ── PANEL SESSION MANAGEMENT ──
+let addPanelSessionSlideIdx = 0;
+
+function openAddPanelSession(slideIdx){
+  addPanelSessionSlideIdx=slideIdx;
+  document.getElementById('newSessionName').value='';
+  document.getElementById('addSessionModal').classList.add('open');
+  document.getElementById('newSessionName').focus();
+}
+
+async function deletePanelSession(slideIdx,id){
+  openConfirm('Delete session?','All files will be permanently deleted.','Delete',async()=>{
+    const res=await fetch(`/api/library/sessions/${id}`,{method:'DELETE',headers:{'x-auth-token':authToken}});
+    if(res.ok){showToast('Session deleted');loadLibraryAccordion(0);loadLibraryAccordion(1);}
+  });
+}
+
+// ── ADD/DELETE SECTORS ──
+function openAddSector(){document.getElementById('newSectorId').value='';document.getElementById('newSectorName').value='';selectedNewTheme='crimson';document.querySelectorAll('.theme-dot').forEach(d=>d.classList.remove('selected'));document.querySelector('.theme-dot[data-theme="crimson"]').classList.add('selected');document.getElementById('addSectorModal').classList.add('open');document.getElementById('newSectorId').focus();}
+function closeAddSector(){document.getElementById('addSectorModal').classList.remove('open');}
+function selectTheme(theme,el){selectedNewTheme=theme;document.querySelectorAll('.theme-dot').forEach(d=>d.classList.remove('selected'));el.classList.add('selected');}
+async function submitAddSector(){
+  const id=document.getElementById('newSectorId').value.trim().toUpperCase();
+  const name=document.getElementById('newSectorName').value.trim();
+  if(!id||!name){showToast('Enter ID and name');return;}
+  const res=await fetch('/api/sectors',{method:'POST',headers:{'Content-Type':'application/json','x-auth-token':authToken},body:JSON.stringify({id,name,theme:selectedNewTheme})});
+  const data=await res.json();
+  if(res.ok){closeAddSector();showToast('Sector '+id+' added');}else showToast('Error: '+data.error);
+}
+function deleteSector(id){
+  openConfirm('Delete Sector '+id+'?','Removes the sector permanently.','Delete',async()=>{
+    const res=await fetch('/api/sectors/'+id,{method:'DELETE',headers:{'x-auth-token':authToken}});
+    if(res.ok)showToast('Sector '+id+' deleted');else showToast('Could not delete');
+  });
+}
+
+// ── UPLOAD FROM PANEL ──
+async function uploadFile(key,input){
+  const file=input.files[0];if(!file)return;
+  const btn=document.getElementById('ub-'+key);btn.classList.add('uploading');
+  return new Promise(resolve=>{
+    const xhr=new XMLHttpRequest();
+    xhr.open('POST','/api/upload');xhr.setRequestHeader('x-auth-token',authToken);
+    xhr.upload.onprogress=e=>{if(e.lengthComputable){const p=Math.round(e.loaded/e.total*100);btn.textContent='Uploading... '+p+'%';if(p===100)btn.textContent='Processing...';}};
+    xhr.onload=()=>{
+      try{const d=JSON.parse(xhr.responseText);if(d.url){drafts[key].url=d.url;btn.textContent='✓ '+file.name;btn.classList.remove('uploading');btn.classList.add('done');const ui=document.getElementById('ui-'+key);if(ui)ui.value=d.url;showToast('✓ Uploaded');}}
+      catch{btn.textContent='✕ Failed';btn.classList.remove('uploading');}resolve();
+    };
+    xhr.onerror=()=>{btn.textContent='✕ Failed';btn.classList.remove('uploading');resolve();};
+    const fd=new FormData();fd.append('file',file);xhr.send(fd);
+  });
+}
+
+// ── SCREEN SHARE: JPEG over WebSocket ──
+let shareStream = null, shareInterval = null, shareTargetId = null, rtcPc = null, shareRecorder = null;
+
+async function shareCurrentScreen() {
+  if (!activeSectorId || !state) return;
+  const s = state.sectors.find(x => x.id === activeSectorId);
+  if (!s) return;
+  // Capture target BEFORE stopShareToScreen clears it
+  const targetId = s.screens[currentSlide].id;
+  if (!connected[targetId]) { showToast('Screen ' + targetId + ' is offline'); return; }
+
+  try {
+    stopShareToScreen(); // clears old share
+    shareTargetId = targetId; // re-set after stop
+    showToast('Select your screen in the picker...');
+    shareStream = await navigator.mediaDevices.getDisplayMedia({
+      video: { frameRate: 60, width: { ideal: 1920 }, height: { ideal: 1080 } },
+      audio: false
+    });
+    startJPEGFallback();
+    shareStream.getVideoTracks()[0].onended = () => stopShareToScreen();
+  } catch(e) {
+    if (e.name !== 'AbortError') showToast('Could not start screen share');
+  }
+}
+
+function startJPEGFallback() {
+  if (!shareStream || !shareTargetId) return;
+
+  // Determine all target screens (mirror = both screens in sector)
+  let targetIds = [shareTargetId];
+  if (mirrorMode && activeSectorId && state) {
+    const s = state.sectors.find(x => x.id === activeSectorId);
+    if (s) targetIds = s.screens.map(sc => sc.id);
+  }
+
+  const video = document.createElement('video');
+  video.srcObject = shareStream; video.muted = true; video.playsInline = true; video.play();
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d', { alpha: false, desynchronized: true });
+
+  // Send share-start to all target screens
+  targetIds.forEach(id => {
+    if (ws && ws.readyState === WebSocket.OPEN)
+      ws.send(JSON.stringify({ action: 'share-start', targetScreenId: id }));
+  });
+
+  // Prepare ID bytes for each target
+  const targets = targetIds.map(id => ({
+    id,
+    idBytes: new TextEncoder().encode(id.padEnd(10, ' '))
+  }));
+
+  let sending = false, last = 0;
+  const loop = (t) => {
+    if (!shareStream) return;
+    shareInterval = requestAnimationFrame(loop);
+    if (t - last < 33 || sending || video.readyState < 2 || video.videoWidth === 0) return;
+    last = t; sending = true;
+    if (canvas.width !== video.videoWidth) { canvas.width = video.videoWidth; canvas.height = video.videoHeight; }
+    ctx.drawImage(video, 0, 0);
+    canvas.toBlob(blob => {
+      if (!blob || !ws || ws.readyState !== WebSocket.OPEN) { sending = false; return; }
+      blob.arrayBuffer().then(buf => {
+        // Send to all target screens
+        targets.forEach(({ idBytes }) => {
+          const frame = new Uint8Array(10 + buf.byteLength);
+          frame.set(idBytes, 0); frame.set(new Uint8Array(buf), 10);
+          ws.send(frame.buffer);
+        });
+        sending = false;
+      }).catch(() => { sending = false; });
+    }, 'image/jpeg', 0.75);
+  };
+  shareInterval = requestAnimationFrame(loop);
+  showToast('⬡ Sharing to ' + targetIds.join(' + '));
+}
+
+function handleRTCAnswer(a) {}
+function handleRTCCandidate(c) {}
+
+function stopShareToScreen() {
+  if (shareInterval) { cancelAnimationFrame(shareInterval); shareInterval = null; }
+  if (shareStream) {
+    if (shareStream._vh) document.removeEventListener('visibilitychange', shareStream._vh);
+    shareStream.getTracks().forEach(t => t.stop());
+    shareStream = null;
+  }
+  if (ws && ws.readyState === WebSocket.OPEN && shareTargetId) {
+    // Stop all screens (mirror mode may have multiple)
+    let targetIds = [shareTargetId];
+    if (mirrorMode && activeSectorId && state) {
+      const s = state.sectors.find(x => x.id === activeSectorId);
+      if (s) targetIds = s.screens.map(sc => sc.id);
+    }
+    targetIds.forEach(id => ws.send(JSON.stringify({ action: 'share-stop', targetScreenId: id })));
+  }
+  shareTargetId = null;
+  showToast('Screen share stopped');
+}
+
+// ── STOP ALL ──
+function stopAllScreens(){
+  openConfirm('Stop All Screens?','Clears every screen in every sector.','Stop Now',()=>{
+    if(!state||!ws||ws.readyState!==WebSocket.OPEN)return;
+    state.sectors.forEach(s=>ws.send(JSON.stringify({action:'clear',sectorId:s.id})));
+    showToast('⏹ All screens stopped');
+  });
+}
+
+// ── WELCOME ──
+let welcomeType = 'text';
+
+function openWelcomeConfig(){
+  document.getElementById('welcomeModal').classList.add('open');
+}
+function closeWelcomeConfig(){
+  document.getElementById('welcomeModal').classList.remove('open');
+}
+function setWelcomeType(type){
+  welcomeType=type;
+  document.getElementById('wTextFields').style.display=type==='text'?'':'none';
+  document.getElementById('wVideoFields').style.display=type==='video'?'':'none';
+  document.getElementById('wTypeText').style.background=type==='text'?'rgba(255,255,255,0.1)':'transparent';
+  document.getElementById('wTypeText').style.color=type==='text'?'var(--text)':'var(--muted)';
+  document.getElementById('wTypeText').style.borderColor=type==='text'?'rgba(255,255,255,0.3)':'var(--border)';
+  document.getElementById('wTypeVideo').style.background=type==='video'?'rgba(255,255,255,0.1)':'transparent';
+  document.getElementById('wTypeVideo').style.color=type==='video'?'var(--text)':'var(--muted)';
+  document.getElementById('wTypeVideo').style.borderColor=type==='video'?'rgba(255,255,255,0.3)':'var(--border)';
+}
+function launchWelcome(){
+  if(!ws||ws.readyState!==WebSocket.OPEN)return;
+  let content;
+  if(welcomeType==='text'){
+    content={type:'announcement',headline:document.getElementById('wHeadline').value||'Welcome',body:document.getElementById('wBody').value||'',eyebrow:document.getElementById('wEyebrow').value||''};
+  } else {
+    const url=document.getElementById('wVideoUrl').value.trim();
+    if(!url){showToast('Pick a video first');return;}
+    content={type:'video',url};
+  }
+  ws.send(JSON.stringify({action:'broadcast',content}));
+  closeWelcomeConfig();
+  showToast('★ Welcome launched to all screens');
+}
+async function openWelcomeLibPicker(){
+  document.getElementById('welcomeLibModal').classList.add('open');
+  const grid=document.getElementById('welcomeLibGrid');
+  grid.innerHTML='<div class="lib-empty">Loading...</div>';
+  try{
+    const res=await fetch('/api/library/sessions',{headers:{'x-auth-token':authToken}});
+    const sessions=await res.json();
+    const allFiles=[];
+    for(const s of sessions){
+      const r2=await fetch(`/api/library/sessions/${s.id}/files`,{headers:{'x-auth-token':authToken}});
+      const files=await r2.json();
+      files.filter(f=>f.type==='video').forEach(f=>allFiles.push({...f,sessionName:s.name}));
+    }
+    if(!allFiles.length){grid.innerHTML='<div class="lib-empty">No videos in library</div>';return;}
+    grid.innerHTML=allFiles.map(f=>`
+      <div class="lib-item" onclick="selectWelcomeVideo('${f.url}')">
+        <video src="${f.url}" muted style="width:100%;height:100%;object-fit:cover"></video>
+        <span class="lib-item-type">${f.sessionName}</span>
+      </div>`).join('');
+  }catch{grid.innerHTML='<div class="lib-empty">Could not load</div>';}
+}
+function closeWelcomeLibPicker(){
+  document.getElementById('welcomeLibModal').classList.remove('open');
+}
+function selectWelcomeVideo(url){
+  document.getElementById('wVideoUrl').value=url;
+  const preview=document.getElementById('wVideoPreview');
+  const el=document.getElementById('wVideoPreviewEl');
+  el.src=url; preview.style.display='block';
+  closeWelcomeLibPicker();
+  showToast('✓ Video selected');
+}
+
+// ── BROADCAST ──
+function openBroadcast(){document.getElementById('broadcastModal').classList.add('open');document.getElementById('broadcastHeadline').focus();}
+function closeBroadcast(){document.getElementById('broadcastModal').classList.remove('open');}
+function sendBroadcast(){
+  const h=document.getElementById('broadcastHeadline').value.trim();if(!h)return;
+  const b=document.getElementById('broadcastBody').value.trim();
+  if(ws&&ws.readyState===WebSocket.OPEN)ws.send(JSON.stringify({action:'broadcast',content:{type:'announcement',headline:h,body:b,eyebrow:'Announcement'}}));
+  document.getElementById('broadcastHeadline').value='';document.getElementById('broadcastBody').value='';
+  closeBroadcast();showToast('📢 Broadcast sent');
+}
+function quickBroadcast(){
+  const msg=document.getElementById('quickMsg').value.trim();if(!msg)return;
+  if(ws&&ws.readyState===WebSocket.OPEN)ws.send(JSON.stringify({action:'broadcast',content:{type:'announcement',headline:msg,body:'',eyebrow:'Announcement'}}));
+  document.getElementById('quickMsg').value='';showToast('📢 Sent to all screens');
+}
+
+// ── DRAG & DROP ──
+function handleDrop(event,id){
+  event.preventDefault();document.getElementById('card-'+id)?.classList.remove('drag-over');
+  const file=event.dataTransfer.files[0];if(!file)return;
+  const isImg=/image/.test(file.type),isVid=/video/.test(file.type);
+  if(!isImg&&!isVid){showToast('Images and videos only');return;}
+  showToast('Uploading...');
+  const fd=new FormData();fd.append('file',file);
+  fetch('/api/upload',{method:'POST',headers:{'x-auth-token':authToken},body:fd}).then(r=>r.json()).then(d=>{
+    if(d.url&&ws&&ws.readyState===WebSocket.OPEN){const c={type:isImg?'image':'video',url:d.url};ws.send(JSON.stringify({action:'launch',sectorId:id,screen1Content:c,screen2Content:c}));showToast('✓ Launched to Sector '+id);}
+  }).catch(()=>showToast('Upload failed'));
+}
+
+// ── LIBRARY SEARCH ──
+let allLibFilesCache = [];
+
+async function buildLibCache(){
+  try{
+    const res=await fetch('/api/library/sessions',{headers:{'x-auth-token':authToken}});
+    const sessions=await res.json();
+    allLibFilesCache=[];
+    for(const s of sessions){
+      const r2=await fetch(`/api/library/sessions/${s.id}/files`,{headers:{'x-auth-token':authToken}});
+      const files=await r2.json();
+      files.forEach(f=>allLibFilesCache.push({...f,sessionName:s.name,sessionId:s.id}));
+    }
+  }catch{}
+}
+
+function searchLibrary(query){
+  const clear=document.getElementById('libSearchClear');
+  const results=document.getElementById('libSearchResults');
+  const tabs=document.getElementById('sessionTabs');
+  const grid=document.getElementById('libGrid');
+  if(!query.trim()){
+    clear.style.display='none';
+    results.style.display='none';
+    tabs.style.display='';
+    grid.style.display='';
+    return;
+  }
+  clear.style.display='';
+  tabs.style.display='none';
+  grid.style.display='none';
+  results.style.display='block';
+  const q=query.toLowerCase();
+  const isAdmin=userRole==='admin';
+  const matches=allLibFilesCache.filter(f=>
+    f.sessionName.toLowerCase().includes(q)||
+    f.name.toLowerCase().includes(q)||
+    f.type.toLowerCase().includes(q)
+  );
+  const searchGrid=document.getElementById('libSearchGrid');
+  if(!matches.length){searchGrid.innerHTML='<div class="lib-empty">No results found</div>';return;}
+  searchGrid.innerHTML=matches.map(f=>`
+    <div class="lib-item" style="position:relative">
+      <${f.type==='image'?'img':'video'} src="${f.url}" ${f.type==='video'?'muted':''} loading="lazy" style="width:100%;height:100%;object-fit:cover">
+      <span class="lib-item-type">${f.sessionName}</span>
+      ${isAdmin?`<button class="lib-item-del" onclick="deleteLibFile('${f.sessionId}','${f.name}');searchLibrary(document.getElementById('libSearch').value)">✕</button>`:''}
+      <div onclick="showToast('Tap sector → open screen → pick from library')" style="position:absolute;inset:0;cursor:pointer"></div>
+    </div>`).join('');
+}
+
+function clearLibSearch(){
+  document.getElementById('libSearch').value='';
+  searchLibrary('');
+}
+
+
+// ── CONFIRM ──
+function openConfirm(title,msg,btnLabel,cb){document.getElementById('confirmTitle').textContent=title;document.getElementById('confirmMsg').textContent=msg;document.getElementById('confirmBtn').textContent=btnLabel||'Confirm';confirmCallback=cb;document.getElementById('confirmModal').classList.add('open');}
+function closeConfirm(){document.getElementById('confirmModal').classList.remove('open');confirmCallback=null;}
+function executeConfirm(){const cb=confirmCallback;closeConfirm();if(cb)cb();}
+
+// ── TOAST ──
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
+
+checkAuth();
+</script>
+</body>
+</html>

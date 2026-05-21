@@ -1,0 +1,87 @@
+[
+  {
+    "id": "A",
+    "name": "Sector A",
+    "theme": "crimson",
+    "screens": [
+      {
+        "id": "A1",
+        "label": "Screen A-Left",
+        "content": null
+      },
+      {
+        "id": "A2",
+        "label": "Screen A-Right",
+        "content": null
+      }
+    ]
+  },
+  {
+    "id": "B",
+    "name": "Sector B",
+    "theme": "ocean",
+    "screens": [
+      {
+        "id": "B1",
+        "label": "Screen B-Left",
+        "content": null
+      },
+      {
+        "id": "B2",
+        "label": "Screen B-Right",
+        "content": null
+      }
+    ]
+  },
+  {
+    "id": "C",
+    "name": "Sector C",
+    "theme": "forest",
+    "screens": [
+      {
+        "id": "C1",
+        "label": "Screen C-Left",
+        "content": null
+      },
+      {
+        "id": "C2",
+        "label": "Screen C-Right",
+        "content": null
+      }
+    ]
+  },
+  {
+    "id": "D",
+    "name": "Sector D",
+    "theme": "amber",
+    "screens": [
+      {
+        "id": "D1",
+        "label": "Screen D-Left",
+        "content": null
+      },
+      {
+        "id": "D2",
+        "label": "Screen D-Right",
+        "content": null
+      }
+    ]
+  },
+  {
+    "id": "E",
+    "name": "Sector E",
+    "theme": "violet",
+    "screens": [
+      {
+        "id": "E1",
+        "label": "Screen E-Left",
+        "content": null
+      },
+      {
+        "id": "E2",
+        "label": "Screen E-Right",
+        "content": null
+      }
+    ]
+  }
+]

@@ -1,0 +1,30 @@
+{
+  "A": {
+    "s1": {
+      "type": "video",
+      "url": "/uploads/sessions/default/1779331326613-569427.mp4",
+      "startTime": 1779331480179
+    },
+    "s2": {
+      "type": "video",
+      "url": "/uploads/sessions/default/1779331326613-569427.mp4",
+      "startTime": 1779331480179
+    }
+  },
+  "B": {
+    "s1": null,
+    "s2": null
+  },
+  "C": {
+    "s1": null,
+    "s2": null
+  },
+  "D": {
+    "s1": null,
+    "s2": null
+  },
+  "E": {
+    "s1": null,
+    "s2": null
+  }
+}

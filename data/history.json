@@ -1,0 +1,60 @@
+{
+  "A": [
+    {
+      "s1": {
+        "type": "video",
+        "url": "/uploads/sessions/default/1779331326613-569427.mp4",
+        "startTime": 1779331478896
+      },
+      "s2": {
+        "type": "video",
+        "url": "/uploads/sessions/default/1779331326613-569427.mp4",
+        "startTime": 1779331478896
+      },
+      "timestamp": 1779331480179
+    },
+    {
+      "s1": {
+        "type": "video",
+        "url": "/uploads/sessions/default/1779331326613-569427.mp4"
+      },
+      "s2": null,
+      "timestamp": 1779331478897
+    },
+    {
+      "s1": {
+        "type": "video",
+        "url": "/uploads/sessions/default/1779331298347-693783.mp4"
+      },
+      "s2": {
+        "type": "video",
+        "url": "/uploads/sessions/default/1779331298347-693783.mp4"
+      },
+      "timestamp": 1779331307088
+    },
+    {
+      "s1": {
+        "type": "video",
+        "url": "/uploads/sessions/default/1779329779904-823031.mp4"
+      },
+      "s2": {
+        "type": "video",
+        "url": "/uploads/sessions/default/1779329779904-823031.mp4"
+      },
+      "timestamp": 1779331275199
+    },
+    {
+      "s1": {
+        "type": "video",
+        "url": "/uploads/sessions/default/1779331243914-415342.mp4",
+        "startTime": 1779331252948
+      },
+      "s2": {
+        "type": "video",
+        "url": "/uploads/sessions/default/1779331243914-415342.mp4",
+        "startTime": 1779331252948
+      },
+      "timestamp": 1779331254622
+    }
+  ]
+}
